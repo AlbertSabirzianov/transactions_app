@@ -1,0 +1,2 @@
+class TransactionAlreadyExists(Exception):
+    pass
