@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from .schema import SussesResponseSchema, TransactionSchema, ErrorResponse, StatisticSchema, TransactionMiniSchema
 from .dependencies import verify_api_key
 from .models import Transaction, TransactionStatistic
-from .services import save_transaction_in_db, delete_all_from_table, get_last_transactions, get_last_statistic
+from .services import save_transaction_in_db, delete_all_from_table, get_biggest_transactions, get_last_statistic
 from .tasks import statistic_task
 
 
@@ -39,11 +39,11 @@ async def create_transaction(transaction_schema: TransactionSchema):
     }
 )
 async def get_statistic(top_transaction_number: int = 3):
-    last_statistic, last_transactions = await asyncio.gather(
+    last_statistic, biggest_transactions = await asyncio.gather(
         get_last_statistic(),
-        get_last_transactions(top_transaction_number)
+        get_biggest_transactions(top_transaction_number)
     )
-    if not last_statistic or not last_transactions:
+    if not last_statistic or not biggest_transactions:
         raise HTTPException(status_code=400, detail="There are no transactions yet")
     return StatisticSchema(
         total_transactions=last_statistic.total_transactions,
@@ -52,7 +52,7 @@ async def get_statistic(top_transaction_number: int = 3):
             TransactionMiniSchema(
                 transaction_id=transaction.transaction_id,
                 amount=transaction.amount
-            ) for transaction in last_transactions
+            ) for transaction in biggest_transactions
         ]
     )
 

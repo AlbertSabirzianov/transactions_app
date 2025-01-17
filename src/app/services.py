@@ -58,9 +58,9 @@ async def get_last_statistic() -> Optional[TransactionStatistic]:
         return last_statistic
 
 
-async def get_last_transactions(top: int) -> Sequence[Transaction]:
+async def get_biggest_transactions(top: int) -> Sequence[Transaction]:
     async with async_session() as session:
-        stmt = select(Transaction).order_by(Transaction.transaction_id.desc()).limit(top)
+        stmt = select(Transaction).order_by(Transaction.amount.desc()).limit(top)
         result = await session.scalars(stmt)
         return result.fetchall()
 

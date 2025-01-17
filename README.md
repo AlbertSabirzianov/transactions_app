@@ -86,3 +86,7 @@ API_KEY=key
 ```commandline
 docker compose --env-file .env.example up
 ```
+документация будет доступна по адресу
+```text
+http://localhost:8080/docs
+```
