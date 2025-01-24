@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional, Type, Sequence
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from sqlalchemy import delete, select, func
+from sqlalchemy import delete, select, func, insert
 
 from .exeptions import TransactionAlreadyExists
 from .settings import DbSettings
@@ -67,15 +67,11 @@ async def get_biggest_transactions(top: int) -> Sequence[Transaction]:
 
 async def save_new_statistic_to_db() -> None:
     async with async_session() as session:
-        stmt = select(
-            func.count(Transaction.transaction_id).label('total_count'),
-            func.avg(Transaction.amount).label('average_amount'),
-        )
-        result = (await session.execute(stmt)).one()
-        statistic = TransactionStatistic(
+        stmt = insert(TransactionStatistic).values(
             timestamp=int(datetime.now().timestamp() * 1000),
-            total_transactions=result.total_count,
-            average_transaction_amount=result.average_amount
-        )
-        session.add(statistic)
+            total_transactions=select(func.count(Transaction.transaction_id)).label('total_count'),
+            average_transaction_amount=select(func.avg(Transaction.amount)).label('average_amount')
+        ).returning(TransactionStatistic)
+
+        await session.execute(stmt)
         await session.commit()
